@@ -1,18 +1,11 @@
 class DentistScheduler {
     constructor(configuration) {
         this.getAvailability = async () => {
-            const response = await fetch(configuration.SchedulerEndpoint + "availability")
-            console.log("**********")
-            console.log(response)
-            console.log("***************")
+            const response = await fetch(configuration.SchedulerEndpoint + "availability", { method: "get"})
             const times = await response.json()
-
-            console.log("**********")
-            console.log(response.json())
-            console.log("***************")
             let responseText = `Current time slots available: `
             times.map(time => {
-                responseText += `${time}`
+                responseText += ` ${time}`
             })
             return responseText
         }

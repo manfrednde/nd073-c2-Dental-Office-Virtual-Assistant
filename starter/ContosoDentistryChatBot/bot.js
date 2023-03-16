@@ -34,11 +34,6 @@ class DentaBot extends ActivityHandler {
             // don't forget to use the 'await' keyword
             const qnaResults = await this.qnAMaker.getAnswers(context);
 
-            if (qnaResults[0]) {
-                console.log(qnaResults[0])
-                await context.sendActivity(`${qnaResults[0].answer}`);
-            }
-
             const luisResult =  await this.intentRecognizer.executeLuisQuery(context);
           
             if (luisResult.luisResult.prediction.topIntent == "GetAvailability" && 
@@ -50,6 +45,8 @@ class DentaBot extends ActivityHandler {
                 const availabilityResults = await this.dentistScheduler.getAvailability();
                 console.log(availabilityResults)
                 await context.sendActivity(availabilityResults);
+                await next();
+                return;
             }
 
             if (luisResult.luisResult.prediction.topIntent == "ScheduleAppointment" && 
@@ -57,24 +54,23 @@ class DentaBot extends ActivityHandler {
                 luisResult.intents.ScheduleAppointment &&
                 luisResult.intents.ScheduleAppointment.score &&
                 luisResult.intents.ScheduleAppointment.score > .7) {
-
+                // fix time
                 const availabilityResults = await this.dentistScheduler.scheduleAppointment(10)
                 await context.sendActivity(availabilityResults);
+                await next();
+                return;
             }
             console.log(luisResult)
-                     
-            // determine which service to respond with based on the results from LUIS //
 
-            // if(top intent is intentA and confidence greater than 50){
-            //  doSomething();
-            //  await context.sendActivity();
-            //  await next();
-            //  return;
-            // }
-            // else {...}
-             
+            if (qnaResults[0]) {
+                console.log(qnaResults[0])
+                await context.sendActivity(`${qnaResults[0].answer}`);
+            } else {
+                await context.sendActivity(`I am not able to find a answer for you`)
+            }
+
             await next();
-    });
+        });
 
         this.onMembersAdded(async (context, next) => {
         const membersAdded = context.activity.membersAdded;
