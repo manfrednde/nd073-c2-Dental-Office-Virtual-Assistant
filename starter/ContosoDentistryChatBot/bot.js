@@ -35,6 +35,8 @@ class DentaBot extends ActivityHandler {
             const qnaResults = await this.qnAMaker.getAnswers(context);
 
             const luisResult =  await this.intentRecognizer.executeLuisQuery(context);
+
+            console.log(luisResult.entities.time[0])
           
             if (luisResult.luisResult.prediction.topIntent == "GetAvailability" && 
                 luisResult.intents &&
@@ -43,7 +45,6 @@ class DentaBot extends ActivityHandler {
                 luisResult.intents.GetAvailability.score > .7) {
 
                 const availabilityResults = await this.dentistScheduler.getAvailability();
-                console.log(availabilityResults)
                 await context.sendActivity(availabilityResults);
                 await next();
                 return;
@@ -53,9 +54,11 @@ class DentaBot extends ActivityHandler {
                 luisResult.intents &&
                 luisResult.intents.ScheduleAppointment &&
                 luisResult.intents.ScheduleAppointment.score &&
-                luisResult.intents.ScheduleAppointment.score > .7) {
-                // fix time
-                const availabilityResults = await this.dentistScheduler.scheduleAppointment(10)
+                luisResult.intents.ScheduleAppointment.score > .7 && 
+                luisResult.entities && 
+                luisResult.entities.time ) {
+
+                const availabilityResults = await this.dentistScheduler.scheduleAppointment(luisResult.entities.time[0]);
                 await context.sendActivity(availabilityResults);
                 await next();
                 return;
@@ -75,7 +78,7 @@ class DentaBot extends ActivityHandler {
         this.onMembersAdded(async (context, next) => {
         const membersAdded = context.activity.membersAdded;
         //write a custom greeting
-        const welcomeText = 'welcome to the dental office';
+        const welcomeText = 'welcome to the dental office virtual assistance. This chatbot can be used to schedule an dental appointment';
         for (let cnt = 0; cnt < membersAdded.length; ++cnt) {
             if (membersAdded[cnt].id !== context.activity.recipient.id) {
                 await context.sendActivity(MessageFactory.text(welcomeText, welcomeText));
